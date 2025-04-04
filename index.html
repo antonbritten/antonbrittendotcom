@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anton Britten - Portfolio | AI & Ecology</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Global Styles & Color Palette (mostly unchanged) --- */
+        :root {
+            --bg-base-hsla: 45, 8%, 7%;
+            --bg-base: hsl(var(--bg-base-hsla));
+            --text-color: #E8E8E8;
+            --primary-accent: #9CCC65;
+            --secondary-accent: #4CAF50;
+            --border-color: #388E3C;
+            --card-bg: rgba(17, 30, 22, 0.85);
+            --card-bg-hover: rgba(25, 45, 33, 0.9);
+            --font-main: 'Lato', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        }
+        /* Basic setup, body, canvas */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            background-color: var(--bg-base); color: var(--text-color);
+            font-family: var(--font-main); line-height: 1.7; font-size: 17px;
+            font-weight: 300; overflow-x: hidden;
+        }
+        #fractalCanvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; pointer-events: none;
+        }
+        /* Content Structure (Hero, main, content-wrapper, etc. unchanged) */
+        main { position: relative; z-index: 1; }
+        .content-wrapper { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+        h1, h2, h3 { color: var(--primary-accent); margin-bottom: 0.8em; line-height: 1.3; font-weight: 700; }
+        h1 { font-size: 3rem; } h2 { font-size: 2.1rem; } h3 { font-size: 1.6rem; }
+        p { margin-bottom: 1.2em; }
+        a { color: var(--primary-accent); text-decoration: none; transition: color 0.3s ease; font-weight: 400; }
+        a:hover, a:focus { color: #C5E1A5; text-decoration: underline; }
+        #hero {
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; text-align: center; position: relative; z-index: 1;
+            padding: 20px; background: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+            box-shadow: none; border: none; margin-bottom: 40px;
+        }
+        #hero .hero-content {
+             max-width: 800px; background-color: rgba(19, 17, 16, 0.7); /* Slightly higher opacity for contrast */
+             padding: 30px 40px; border-radius: 8px;
+        }
+        #hero .subtitle { font-size: 1.5rem; color: var(--text-color); margin-bottom: 1.5em; font-weight: 300; line-height: 1.5; }
+        #hero .cta-button {
+            display: inline-block; background-color: var(--primary-accent); color: #111;
+            padding: 14px 35px; border-radius: 5px; font-weight: 700;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            border: none; margin-top: 15px; font-size: 1.1rem;
+        }
+        #hero .cta-button:hover { background-color: var(--secondary-accent); color: var(--text-color); text-decoration: none; transform: translateY(-3px); }
+        main .content-wrapper section {
+            background-color: var(--card-bg); padding: 35px 40px; margin-bottom: 40px;
+            border-radius: 10px; box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(56, 142, 60, 0.3); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); /* Slightly more blur */
+            transition: background-color 0.3s ease;
+        }
+        main .content-wrapper section:hover { background-color: var(--card-bg-hover); }
+        main .content-wrapper section:last-of-type { margin-bottom: 0; }
+        /* List Styling with SVG Marker (unchanged) */
+        ul { list-style: none; padding-left: 0; }
+        li { margin-bottom: 0.8em; position: relative; padding-left: 28px; }
+        li::before {
+            content: ''; position: absolute; left: 0; top: 6px; width: 16px; height: 16px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 12' fill='%239CCC65'%3E%3Cpath d='M0 10.59L4.58 6 0 1.41 1.41 0l6 6-6 6z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-size: contain; opacity: 0.8;
+        }
+        /* Skills, Projects, Contact, Footer Sections (Structure & basic styles unchanged) */
+        .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 35px; }
+        .skill-category { padding-top: 10px; }
+        .skill-category h3 { color: var(--secondary-accent); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 15px; font-weight: 400; font-size: 1.4rem; }
+        .project { background-color: rgba(46, 125, 50, 0.15); border: 1px solid var(--border-color); padding: 25px; margin-bottom: 30px; border-radius: 6px; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .project:hover { transform: translateY(-5px) scale(1.01); box-shadow: 0 8px 25px rgba(156, 204, 101, 0.2); }
+        .project h3 { margin-bottom: 10px; font-size: 1.4rem; font-weight: 700; }
+        .project-tags { margin-top: 15px; }
+        .project-tags span { display: inline-block; background-color: var(--secondary-accent); color: var(--text-color); padding: 4px 10px; border-radius: 4px; font-size: 0.85rem; margin-right: 8px; margin-bottom: 8px; font-weight: 400; }
+        #contact ul { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 20px; }
+        #contact li { padding-left: 0; } #contact li::before { content: none; }
+        #contact a { display: inline-block; padding: 10px 20px; border: 1px solid var(--secondary-accent); border-radius: 5px; transition: background-color 0.3s ease, color 0.3s ease; font-weight: 400; }
+        #contact a:hover { background-color: var(--secondary-accent); color: var(--text-color); text-decoration: none; }
+        footer { text-align: center; padding: 40px 20px; margin-top: 20px; font-size: 0.95rem; color: rgba(232, 232, 232, 0.7); position: relative; z-index: 1; }
+        /* Responsive Design (unchanged) */
+        @media (max-width: 768px) {
+            body { font-size: 16px; } h1 { font-size: 2.6rem; } h2 { font-size: 1.9rem; } h3 { font-size: 1.5rem; } #hero .subtitle { font-size: 1.3rem; }
+            main .content-wrapper { padding: 0 15px; } main .content-wrapper section { padding: 30px; }
+            .skills-grid { grid-template-columns: 1fr; gap: 30px; }
+            #contact ul { flex-direction: column; align-items: center; gap: 15px; } #contact a { width: 80%; text-align: center; }
+            #hero .hero-content { padding: 20px 25px; }
+        }
+         @media (max-width: 480px) {
+            body { font-size: 15px; } h1 { font-size: 2.1rem; } h2 { font-size: 1.7rem; } h3 { font-size: 1.4rem; } #hero .subtitle { font-size: 1.1rem; }
+            main .content-wrapper { padding: 0 10px; } main .content-wrapper section { padding: 25px 20px; }
+            #hero .cta-button { padding: 12px 30px; font-size: 1rem; }
+            .project-tags span { font-size: 0.8rem; } #contact a { width: 90%; }
+            li { padding-left: 24px; } li::before { width: 14px; height: 14px; top: 7px;} #hero .hero-content { padding: 15px 20px; }
+         }
+    </style>
+</head>
+<body>
+
+    <canvas id="fractalCanvas"></canvas>
+
+    <!-- Hero Section (Unchanged HTML structure) -->
+    <section id="hero">
+         <div class="hero-content">
+            <h1>Anton Britten</h1>
+            <p class="subtitle">
+                Exploring the Intersection of Terrestrial Ecology and Artificial Intelligence
+            </p>
+            <a href="#about" class="cta-button">Discover More</a>
+        </div>
+    </section>
+
+    <!-- Main content (Unchanged HTML structure) -->
+    <main>
+        <div class="content-wrapper">
+            <!-- About Section -->
+            <section id="about">
+                 <h2>About Me</h2>
+                 <p>I'm Anton Britten, an Environmental Science and Resource Management (ESRM) student at the University of Washington...</p>
+                 <p>I am particularly invested in applying computational techniques... to ecological research...</p>
+            </section>
+            <!-- Skills Section -->
+            <section id="skills">
+                <h2>Core Competencies</h2>
+                <div class="skills-grid">
+                    <div class="skill-category"><h3>Ecological Foundations</h3><ul><li>...</li></ul></div>
+                    <div class="skill-category"><h3>Data Science & Geospatial</h3><ul><li>...</li></ul></div>
+                    <div class="skill-category"><h3>AI & Machine Learning</h3><ul><li>...</li></ul></div>
+                </div>
+            </section>
+            <!-- Projects Section -->
+            <section id="projects">
+                <h2>Projects & Explorations</h2><p>Selected works demonstrating...</p>
+                <div class="project"><h3>Predictive Habitat Suitability...</h3><p>...</p><div class="project-tags">...</div></div>
+                <div class="project"><h3>Automated Analysis of Forest Inventory...</h3><p>...</p><div class="project-tags">...</div></div>
+                <div class="project"><h3>Exploring Deep Learning...</h3><p>...</p><div class="project-tags">...</div></div>
+            </section>
+            <!-- Contact Section -->
+            <section id="contact">
+                <h2>Connect & Collaborate</h2><p>I'm actively seeking opportunities...</p>
+                 <ul><li><a href="mailto:your_email@example.com">...</a></li><li><a href="..." target="_blank">...</a></li><li><a href="..." target="_blank">...</a></li></ul>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer (Unchanged HTML structure) -->
+    <footer> <p>© 2024 Anton Britten. Inspired by nature's emergent patterns.</p> </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('fractalCanvas');
+            const ctx = canvas.getContext('2d');
+            let width = canvas.width = window.innerWidth;
+            let height = canvas.height = window.innerHeight;
+            let animationFrameId;
+            let fractalSystems = [];
+            const NUM_SYSTEMS = 5; // Can adjust this (5 is a bit more busy with slower fade)
+            const baseHue = 100;
+            const hueRange = 45; // Widen hue range slightly
+
+            // --- Configuration ---
+            const globalConfig = {
+                // -- Slower Movement --
+                fadeAmount: 0.008, // Significantly lower fade amount -> structures persist much longer
+                // -- Faster Growth --
+                baseGrowthSpeed: 0.015, // Base speed before randomization (increased from previous very slow)
+                growthSpeedVariance: 0.01, // Random variance around base speed
+                // Other Visuals
+                lineWidthBase: 4, // Slightly thinner base lines
+                lineWidthDepthFactor: 0.75, // Lines thin a bit slower
+                minBranchLength: 0.5,
+                alphaBase: 0.2, // Start slightly more transparent to layer better with slow fade
+                alphaDepthFactor: 0.97, // Alpha fades even slower with depth
+            };
+
+            // --- Fractal System Factory ---
+            function createFractalSystem(index) {
+                let x, y, angle;
+                const edgeMargin = 20; // How far off-screen to start
+                const edge = Math.floor(Math.random() * 4); // 0: top, 1: bottom, 2: left, 3: right
+
+                // -- Starting positions from all edges --
+                switch (edge) {
+                    case 0: // Top Edge
+                        x = Math.random() * width;
+                        y = -edgeMargin;
+                        angle = Math.PI / 2 + (Math.random() - 0.5) * 0.8; // Grow downwards +/- variance
+                        break;
+                    case 1: // Bottom Edge
+                        x = Math.random() * width;
+                        y = height + edgeMargin;
+                        angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.8; // Grow upwards +/- variance
+                        break;
+                    case 2: // Left Edge
+                        x = -edgeMargin;
+                        y = Math.random() * height;
+                        angle = 0 + (Math.random() - 0.5) * 0.8; // Grow rightwards +/- variance
+                        break;
+                    case 3: // Right Edge
+                    default:
+                        x = width + edgeMargin;
+                        y = Math.random() * height;
+                        angle = Math.PI + (Math.random() - 0.5) * 0.8; // Grow leftwards +/- variance
+                        break;
+                }
+
+                const system = {
+                    id: index,
+                    x: x,
+                    y: y,
+                    angle: angle, // Initial growth direction
+                    currentDepth: 0,
+                    // Faster Growth (individual system reaches extent quicker)
+                    maxDepth: 8 + Math.random() * 3, // Depth 8-11 (slightly reduced range?)
+                    growthSpeed: globalConfig.baseGrowthSpeed + Math.random() * globalConfig.growthSpeedVariance, // Use configured faster base + variance
+                    isWaiting: false,
+                    resetTimer: null,
+                    resetDelay: 18000 + Math.random() * 12000, // Pause 18-30 seconds (longer pause compliments slower fade)
+                    params: {
+                        lengthFactor: 0.7 + Math.random() * 0.12, // 0.7 - 0.82 range
+                        branchAngle: 0.45 + Math.random() * 0.4, // 0.45 - 0.85 radians
+                        angleVariance: 0.5 + Math.random() * 0.5, // 0.5 - 1.0 radians randomness
+                        initialLength: (Math.min(width, height) / (10 + Math.random() * 6)), // Smaller initial length relative to screen size
+                        hue: baseHue + (Math.random() - 0.5) * hueRange,
+                        saturation: 45 + Math.random() * 30, // Slightly lower saturation potential
+                        lightness: 28 + Math.random() * 15, // Consistent lightness
+                        numBranches: Math.random() > 0.25 ? 3 : 2, // Higher chance of 3 branches
+                    }
+                };
+                // console.log(`Created system ${index} from edge ${edge}, maxD: ${system.maxDepth.toFixed(1)}, speed: ${system.growthSpeed.toFixed(4)}`);
+                return system;
+            }
+
+             // --- Recursive Branch Drawing (Unchanged from previous version for "beauty") ---
+            function drawBranch(sys, x, y, length, angle, thickness, currentDepth) {
+                if (currentDepth > sys.currentDepth || thickness < 0.2 || length < globalConfig.minBranchLength) return;
+
+                const lengthVariance = length * (Math.random() * 0.1 - 0.05);
+                const angleVarianceStep = (Math.random() - 0.5) * 0.08;
+                const endX = x + Math.cos(angle + angleVarianceStep) * (length + lengthVariance);
+                const endY = y + Math.sin(angle + angleVarianceStep) * (length + lengthVariance);
+
+                const alpha = globalConfig.alphaBase * Math.pow(globalConfig.alphaDepthFactor, currentDepth);
+                 ctx.strokeStyle = `hsla(${sys.params.hue}, ${sys.params.saturation}%, ${sys.params.lightness}%, ${alpha})`;
+                 ctx.lineWidth = thickness;
+                 ctx.beginPath();
+                 ctx.moveTo(x, y);
+                 ctx.lineTo(endX, endY);
+                 ctx.stroke();
+
+                 const newLength = length * sys.params.lengthFactor;
+                 const newThickness = thickness * globalConfig.lineWidthDepthFactor;
+                 const nextDepth = currentDepth + 1;
+                 let angle1 = angle - sys.params.branchAngle + (Math.random() - 0.5) * sys.params.angleVariance;
+                 drawBranch(sys, endX, endY, newLength, angle1, newThickness, nextDepth);
+                 let angle2 = angle + sys.params.branchAngle + (Math.random() - 0.5) * sys.params.angleVariance;
+                 drawBranch(sys, endX, endY, newLength, angle2, newThickness, nextDepth);
+                 if (sys.params.numBranches === 3) {
+                    let angle3 = angle + (Math.random() - 0.5) * sys.params.angleVariance * 1.5;
+                    drawBranch(sys, endX, endY, newLength * 0.9, newThickness * 0.9, angle3, nextDepth);
+                 }
+            }
+
+            // --- Main Animation Loop ---
+            function animate() {
+                // -- Slower Movement via Fade --
+                ctx.fillStyle = `hsla(var(--bg-base-hsla), ${globalConfig.fadeAmount})`;
+                ctx.fillRect(0, 0, width, height);
+
+                // Update and draw each fractal system
+                fractalSystems.forEach(sys => {
+                    if (sys.isWaiting) return;
+
+                    // -- Faster Growth Rate --
+                    if (sys.currentDepth < sys.maxDepth) {
+                        sys.currentDepth += sys.growthSpeed; // Use the faster speed
+                        drawBranch(sys, sys.x, sys.y, sys.params.initialLength, sys.angle, globalConfig.lineWidthBase, 0);
+                    } else if (!sys.resetTimer) {
+                        sys.isWaiting = true;
+                        sys.resetTimer = setTimeout(() => {
+                            Object.assign(sys, createFractalSystem(sys.id));
+                            sys.isWaiting = false;
+                            sys.resetTimer = null;
+                        }, sys.resetDelay);
+                    }
+                });
+
+                animationFrameId = requestAnimationFrame(animate);
+            }
+
+            // --- Initialization and Resize ---
+            function setup() {
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                fractalSystems.forEach(sys => { if (sys.resetTimer) clearTimeout(sys.resetTimer); });
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                fractalSystems = [];
+                for (let i = 0; i < NUM_SYSTEMS; i++) { fractalSystems.push(createFractalSystem(i)); }
+                ctx.fillStyle = `hsl(var(--bg-base-hsla))`;
+                ctx.fillRect(0, 0, width, height);
+                animate();
+            }
+
+            let resizeTimeoutDebounce;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeoutDebounce);
+                resizeTimeoutDebounce = setTimeout(setup, 300);
+            });
+
+            // Initial Setup
+            setup();
+        });
+    </script>
+
+</body>
+</html>
